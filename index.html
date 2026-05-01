@@ -181,6 +181,7 @@
     <div class="weather-temp">☀️ 19°C</div>
     <div class="weather-desc">Partly sunny · Berlin</div>
     <button onclick="location.reload()" style="margin-top:6px;background:var(--terra-light);border:none;color:var(--terra-dark);font-family:'Nunito',sans-serif;font-weight:700;font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;letter-spacing:0.3px;">↺ Refresh</button>
+    <button onclick="exportIcal()" style="margin-top:4px;background:var(--blue-light);border:none;color:var(--blue);font-family:'Nunito',sans-serif;font-weight:700;font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;letter-spacing:0.3px;">📅 Export to iCal</button>
   </div>
 </div>
 
@@ -660,6 +661,93 @@ function saveSchool() {
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) closeModals(); });
 });
+
+/* EXPORT TO ICAL */
+function exportIcal() {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Fordyce Command Center//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:Fordyce Family',
+  ];
+
+  function icalDate(dateStr, timeStr) {
+    const d = dateStr.replace(/-/g, '');
+    if (timeStr) {
+      const t = timeStr.replace(':', '') + '00';
+      // Calculate end time +1hr
+      const h = parseInt(timeStr.split(':')[0]);
+      const m = timeStr.split(':')[1];
+      const endH = String((h + 1) % 24).padStart(2, '0');
+      return { start: `DTSTART:${d}T${t}`, end: `DTEND:${d}T${endH}${m}00` };
+    }
+    // All-day: DTEND is next day
+    const next = fmt(addDays(parseDate(dateStr), 1)).replace(/-/g, '');
+    return { start: `DTSTART;VALUE=DATE:${d}`, end: `DTEND;VALUE=DATE:${next}` };
+  }
+
+  function sanitise(str) {
+    return (str || '').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+  }
+
+  // Calendar events
+  events.forEach(e => {
+    const member = MEMBERS[e.member] || MEMBERS[''];
+    const { start, end } = icalDate(e.date, e.time);
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:ev-${e.id}@fordyce`);
+    lines.push(start); lines.push(end);
+    lines.push(`SUMMARY:${sanitise(e.name)}`);
+    lines.push(`DESCRIPTION:${sanitise(member.label)}`);
+    lines.push('END:VEVENT');
+  });
+
+  // Upcoming events
+  schoolEvents.forEach(e => {
+    const kid = e.kid ? MEMBERS[e.kid] : MEMBERS[''];
+    const { start, end } = icalDate(e.date, '');
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:upcoming-${e.id}@fordyce`);
+    lines.push(start); lines.push(end);
+    lines.push(`SUMMARY:📌 ${sanitise(e.name)}`);
+    lines.push(`DESCRIPTION:${sanitise(e.detail + (kid ? ' · ' + kid.label : ''))}`);
+    lines.push('END:VEVENT');
+  });
+
+  // Meals
+  Object.entries(meals).forEach(([date, dm]) => {
+    (dm.parents||[]).forEach((m, idx) => {
+      const { start, end } = icalDate(date, '');
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:meal-p-${date}-${idx}@fordyce`);
+      lines.push(start); lines.push(end);
+      lines.push(`SUMMARY:🍽 ${sanitise(m)} (Parents)`);
+      lines.push('END:VEVENT');
+    });
+    (dm.children||[]).forEach((m, idx) => {
+      const { start, end } = icalDate(date, '');
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:meal-k-${date}-${idx}@fordyce`);
+      lines.push(start); lines.push(end);
+      lines.push(`SUMMARY:🍽 ${sanitise(m)} (Kids)`);
+      lines.push('END:VEVENT');
+    });
+  });
+
+  lines.push('END:VCALENDAR');
+
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'fordyce-family.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 /* INIT */
 renderWeek(); renderEvents(); renderChores(); renderSchool(); renderMealPlan();
