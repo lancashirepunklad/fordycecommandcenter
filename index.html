@@ -501,7 +501,7 @@ function renderEvents() {
   }).join('');
 }
 
-function deleteEvent(id) { events = events.filter(e => e.id !== id); renderWeek(); renderEvents(); }
+function deleteEvent(id) { events = events.filter(e => e.id !== id); saveData(); renderWeek(); renderEvents(); }
 
 /* CHORES */
 function renderChores() {
@@ -522,8 +522,8 @@ function renderChores() {
   }).join('');
 }
 
-function toggleChore(id) { const c = chores.find(c => c.id === id); if (c) c.done = !c.done; renderChores(); }
-function deleteChore(id) { chores = chores.filter(c => c.id !== id); renderChores(); }
+function toggleChore(id) { const c = chores.find(c => c.id === id); if (c) c.done = !c.done; saveData(); renderChores(); }
+function deleteChore(id) { chores = chores.filter(c => c.id !== id); saveData(); renderChores(); }
 
 /* UPCOMING EVENTS */
 function renderSchool() {
@@ -615,7 +615,7 @@ function confirmMeal(date, group) {
     meals[date][group].push(val);
   }
   activeInput = null;
-  renderMealPlan(); renderWeek();
+  renderMealPlan(); renderWeek(); saveData();
   if (fmt(selectedDate) === date) renderEvents();
 }
 
@@ -627,7 +627,7 @@ function handleMealKey(e, date, group) {
 function removeMeal(date, group, idx) {
   if (!meals[date]||!meals[date][group]) return;
   meals[date][group].splice(idx, 1);
-  renderMealPlan(); renderWeek();
+  renderMealPlan(); renderWeek(); saveData();
   if (fmt(selectedDate) === date) renderEvents();
 }
 
@@ -642,20 +642,20 @@ function saveEvent() {
   const date = document.getElementById('ev-date').value;
   if (!name||!date) return;
   events.push({ id: nextId++, name, date, time: document.getElementById('ev-time').value, member: document.getElementById('ev-member').value });
-  closeModals(); renderWeek(); renderEvents();
+  closeModals(); saveData(); renderWeek(); renderEvents();
 }
 function saveChore() {
   const name = document.getElementById('ch-name').value.trim();
   if (!name) return;
   chores.push({ id: nextId++, name, member: document.getElementById('ch-member').value, done: false });
-  closeModals(); renderChores();
+  closeModals(); saveData(); renderChores();
 }
 function saveSchool() {
   const name = document.getElementById('sc-name').value.trim();
   const date = document.getElementById('sc-date').value;
   if (!name||!date) return;
   schoolEvents.push({ id: nextId++, name, date, detail: document.getElementById('sc-detail').value, kid: document.getElementById('sc-kid').value });
-  closeModals(); renderSchool();
+  closeModals(); saveData(); renderSchool();
 }
 
 document.querySelectorAll('.modal-overlay').forEach(el => {
@@ -749,7 +749,32 @@ function exportIcal() {
   URL.revokeObjectURL(url);
 }
 
+/* PERSISTENCE */
+function saveData() {
+  localStorage.setItem('fordyce_events', JSON.stringify(events));
+  localStorage.setItem('fordyce_chores', JSON.stringify(chores));
+  localStorage.setItem('fordyce_school', JSON.stringify(schoolEvents));
+  localStorage.setItem('fordyce_meals', JSON.stringify(meals));
+  localStorage.setItem('fordyce_nextId', String(nextId));
+}
+
+function loadData() {
+  try {
+    const e = localStorage.getItem('fordyce_events');
+    const c = localStorage.getItem('fordyce_chores');
+    const s = localStorage.getItem('fordyce_school');
+    const m = localStorage.getItem('fordyce_meals');
+    const n = localStorage.getItem('fordyce_nextId');
+    if (e) events = JSON.parse(e);
+    if (c) chores = JSON.parse(c);
+    if (s) schoolEvents = JSON.parse(s);
+    if (m) meals = JSON.parse(m);
+    if (n) nextId = parseInt(n);
+  } catch(err) { console.warn('Could not load saved data', err); }
+}
+
 /* INIT */
+loadData();
 renderWeek(); renderEvents(); renderChores(); renderSchool(); renderMealPlan();
 
 const lastReset = localStorage.getItem('lastReset');
