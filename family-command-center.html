@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Family Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,800;1,300&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #FDF6EC;
+    --card: #FFFDF9;
+    --terra: #C4622D;
+    --terra-light: #F5E6DB;
+    --terra-dark: #8B3E17;
+    --sage: #4A7C59;
+    --sage-light: #E0EDE4;
+    --ink: #2C1810;
+    --ink-muted: #7A6558;
+    --ink-faint: #C5B8B0;
+    --blue: #3D6B99;
+    --blue-light: #E0EBF5;
+    --amber: #D4820A;
+    --amber-light: #FEF3DC;
+    --purple: #6B4E9B;
+    --purple-light: #EDE6F7;
+    --rose: #B84465;
+    --rose-light: #F7E4EC;
+    --green: #3D7A4E;
+    --green-light: #E2F0E6;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--cream);
+    font-family: 'Nunito', sans-serif;
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  body {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 12px 24px;
+    border: 1px solid rgba(196,98,45,0.15);
+  }
+
+  .family-name {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--terra);
+    letter-spacing: -0.3px;
+  }
+
+  .family-name span {
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ink-muted);
+    font-size: 18px;
+  }
+
+  .clock-block {
+    text-align: center;
+  }
+
+  #clock {
+    font-family: 'Fraunces', serif;
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+
+  #date-str {
+    font-size: 13px;
+    color: var(--ink-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .weather-block {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .weather-temp {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .weather-desc {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+
+  /* ─── MAIN GRID ─── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .left-col {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .right-col {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid rgba(196,98,45,0.12);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid rgba(196,98,45,0.1);
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .card-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 18px 14px;
+    min-height: 0;
+  }
+
+  .card-body::-webkit-scrollbar { width: 4px; }
+  .card-body::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 4px; }
+
+  /* ─── WEEK STRIP ─── */
+  .week-strip {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+
+  .day-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1.5px solid transparent;
+    position: relative;
+  }
+
+  .day-cell:hover { background: var(--terra-light); }
+
+  .day-cell.today {
+    background: var(--terra);
+    border-color: var(--terra-dark);
+  }
+
+  .day-cell.today .day-name,
+  .day-cell.today .day-num { color: white !important; }
+
+  .day-cell.selected:not(.today) {
+    border-color: var(--terra);
+    background: var(--terra-light);
+  }
+
+  .day-name {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .day-num {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.1;
+    margin: 2px 0;
+  }
+
+  .day-dots {
+    display: flex;
+    gap: 3px;
+    min-height: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .day-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  /* ─── TODAY EVENTS ─── */
+  .event-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(44,24,16,0.06);
+  }
+
+  .event-item:last-child { border-bottom: none; }
+
+  .event-time {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-muted);
+    min-width: 42px;
+    padding-top: 1px;
+    letter-spacing: 0.3px;
+  }
+
+  .event-bar {
+    width: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    align-self: stretch;
+    min-height: 36px;
+  }
+
+  .event-info { flex: 1; }
+
+  .event-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .event-meta {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+
+  .event-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 24px 0;
+    color: var(--ink-faint);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+  }
+
+  /* ─── CHORES ─── */
+  .chore-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(44,24,16,0.06);
+    transition: opacity 0.2s;
+  }
+
+  .chore-item:last-child { border-bottom: none; }
+  .chore-item.done { opacity: 0.45; }
+  .chore-item.done .chore-name { text-decoration: line-through; }
+
+  .chore-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--ink-faint);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    background: white;
+  }
+
+  .chore-check.checked {
+    background: var(--sage);
+    border-color: var(--sage);
+  }
+
+  .chore-check.checked::after {
+    content: '';
+    width: 6px;
+    height: 10px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(45deg) translate(-1px, -1px);
+    display: block;
+  }
+
+  .chore-info { flex: 1; min-width: 0; }
+
+  .chore-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  .chore-who {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 1px;
+  }
+
+  .member-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .progress-bar-wrap {
+    height: 4px;
+    background: rgba(44,24,16,0.08);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--sage);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* ─── SCHOOL EVENTS ─── */
+  .school-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(44,24,16,0.06);
+  }
+
+  .school-item:last-child { border-bottom: none; }
+
+  .school-date-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 38px;
+    flex-shrink: 0;
+    background: var(--blue-light);
+    border-radius: 8px;
+    padding: 4px;
+  }
+
+  .school-month {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+
+  .school-day {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--blue);
+    line-height: 1;
+  }
+
+  .school-info { flex: 1; }
+
+  .school-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .school-detail {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+
+  .school-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--amber-light);
+    color: var(--amber);
+  }
+
+  .days-away {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--terra);
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .section-header-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44,24,16,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px;
+    width: 420px;
+    max-width: 90vw;
+  }
+
+  .modal h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+
+  .modal input, .modal select, .modal textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: white;
+    margin-bottom: 10px;
+    outline: none;
+  }
+
+  .modal input:focus, .modal select:focus {
+    border-color: var(--terra);
+  }
+
+  .modal-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary { background: var(--terra); color: white; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-cancel { background: var(--terra-light); color: var(--terra-dark); }
+  .btn-cancel:hover { opacity: 0.8; }
+
+  .add-btn {
+    background: transparent;
+    border: 1.5px dashed var(--ink-faint);
+    border-radius: var(--radius-sm);
+    color: var(--ink-muted);
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 7px 12px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .add-btn:hover { border-color: var(--terra); color: var(--terra); background: var(--terra-light); }
+
+  .chores-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .chores-progress-label {
+    font-size: 12px;
+    color: var(--sage);
+    font-weight: 700;
+  }
+
+  /* scrollbar for card-body */
+  .card-body { scrollbar-gutter: stable; }
+
+  /* day selected events list */
+  #day-events-label {
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--terra);
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="family-name">The Fordyces <span>command center</span></div>
+  </div>
+  <div class="clock-block">
+    <div id="clock">—</div>
+    <div id="date-str">Loading…</div>
+  </div>
+  <div class="weather-block">
+    <div class="weather-temp">☀️ 19°C</div>
+    <div class="weather-desc">Partly sunny · Berlin</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT COLUMN -->
+  <div class="left-col">
+
+    <!-- WEEK CALENDAR -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon" style="background:var(--terra-light);">📅</div>
+          <span>This Week</span>
+        </div>
+        <button class="btn btn-primary" style="flex:none;padding:6px 14px;font-size:12px;border-radius:8px;" onclick="openAddEvent()">+ Add Event</button>
+      </div>
+      <div class="card-body" style="padding-top:14px;">
+        <div class="week-strip" id="week-strip"></div>
+      </div>
+    </div>
+
+    <!-- TODAY / SELECTED DAY EVENTS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon" style="background:var(--amber-light);">🗓</div>
+          <span id="day-events-label">Today's Events</span>
+        </div>
+        <span id="event-count-badge" class="section-header-badge" style="background:var(--amber-light);color:var(--amber);">0 events</span>
+      </div>
+      <div class="card-body" id="events-list"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="right-col">
+
+    <!-- CHORES -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon" style="background:var(--sage-light);">✅</div>
+          <span>Daily Chores</span>
+        </div>
+        <span class="chores-progress-label" id="chores-progress-label">0 / 0 done</span>
+      </div>
+      <div class="card-body">
+        <div class="progress-bar-wrap" style="margin-bottom:12px;">
+          <div class="progress-bar-fill" id="chore-progress-fill" style="width:0%"></div>
+        </div>
+        <div id="chores-list"></div>
+        <button class="add-btn" onclick="openAddChore()">+ Add chore</button>
+      </div>
+    </div>
+
+    <!-- SCHOOL EVENTS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="icon" style="background:var(--blue-light);">🎒</div>
+          <span>School Events</span>
+        </div>
+        <button class="btn btn-primary" style="flex:none;padding:6px 14px;font-size:12px;border-radius:8px;" onclick="openAddSchool()">+ Add</button>
+      </div>
+      <div class="card-body" id="school-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD EVENT MODAL -->
+<div class="modal-overlay" id="modal-event">
+  <div class="modal">
+    <h3>Add Calendar Event</h3>
+    <input type="text" id="ev-name" placeholder="Event name">
+    <input type="date" id="ev-date">
+    <input type="time" id="ev-time" placeholder="Time (optional)">
+    <select id="ev-member">
+      <option value="">Whole Family</option>
+      <option value="andy">Andy</option>
+      <option value="helle">Helle</option>
+      <option value="eilidh">Eilidh</option>
+      <option value="mads">Mads</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Add Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CHORE MODAL -->
+<div class="modal-overlay" id="modal-chore">
+  <div class="modal">
+    <h3>Add Daily Chore</h3>
+    <input type="text" id="ch-name" placeholder="Chore name">
+    <select id="ch-member">
+      <option value="andy">Andy</option>
+      <option value="helle">Helle</option>
+      <option value="eilidh">Eilidh</option>
+      <option value="mads">Mads</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveChore()">Add Chore</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SCHOOL EVENT MODAL -->
+<div class="modal-overlay" id="modal-school">
+  <div class="modal">
+    <h3>Add School Event</h3>
+    <input type="text" id="sc-name" placeholder="Event name">
+    <input type="date" id="sc-date">
+    <input type="text" id="sc-detail" placeholder="Details (teacher, location…)">
+    <select id="sc-kid">
+      <option value="">Both kids</option>
+      <option value="eilidh">Eilidh</option>
+      <option value="mads">Mads</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSchool()">Add Event</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MEMBERS = {
+  helle:  { label: 'Helle',  bg: 'var(--rose-light)',   color: 'var(--rose)' },
+  andy:   { label: 'Andy',   bg: 'var(--blue-light)',   color: 'var(--blue)' },
+  eilidh: { label: 'Eilidh', bg: 'var(--purple-light)', color: 'var(--purple)' },
+  mads:   { label: 'Mads',   bg: 'var(--green-light)',  color: 'var(--green)' },
+  '':     { label: 'Family', bg: 'var(--terra-light)',  color: 'var(--terra)' },
+};
+
+const EVENT_COLORS = {
+  helle: '#B84465', andy: '#3D6B99', eilidh: '#6B4E9B',
+  mads:  '#3D7A4E', '': '#C4622D',
+};
+
+const today = new Date();
+let selectedDate = new Date(today);
+
+let events = [
+  { id: 1, name: 'School Drop-off', date: fmt(today), time: '08:15', member: 'andy' },
+  { id: 2, name: 'Yoga Class', date: fmt(today), time: '10:00', member: 'helle' },
+  { id: 3, name: "Mads' Football", date: fmt(addDays(today,1)), time: '16:00', member: 'mads' },
+  { id: 4, name: 'Family Dinner', date: fmt(addDays(today,2)), time: '19:00', member: '' },
+  { id: 5, name: "Eilidh's Playdate", date: fmt(addDays(today,3)), time: '14:00', member: 'eilidh' },
+  { id: 6, name: 'Grocery Run', date: fmt(addDays(today,4)), time: '', member: 'helle' },
+];
+
+let chores = [
+  { id: 1, name: 'Empty dishwasher', member: 'eilidh', done: false },
+  { id: 2, name: 'Take out trash', member: 'andy', done: false },
+  { id: 3, name: 'Tidy living room', member: 'mads', done: false },
+  { id: 4, name: 'Wipe kitchen counter', member: 'helle', done: false },
+  { id: 5, name: 'Feed the cat', member: 'eilidh', done: true },
+  { id: 6, name: 'Check school bags', member: 'helle', done: false },
+];
+
+let schoolEvents = [
+  { id: 1, name: 'Science Fair', date: fmt(addDays(today,5)), detail: 'Bring project by 8am · Gym', kid: 'eilidh' },
+  { id: 2, name: 'Parent-Teacher Meeting', date: fmt(addDays(today,9)), detail: 'Ms. Richter · Room 12', kid: '' },
+  { id: 3, name: 'School Photos', date: fmt(addDays(today,12)), detail: 'Wear school uniform', kid: '' },
+  { id: 4, name: "Mads' Sports Day", date: fmt(addDays(today,14)), detail: 'Away game · Stadtpark', kid: 'mads' },
+  { id: 5, name: 'Spring Break Begins', date: fmt(addDays(today,18)), detail: 'No school until 28th', kid: '' },
+];
+
+let nextId = 100;
+
+function fmt(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function addDays(d, n) {
+  const r = new Date(d); r.setDate(r.getDate()+n); return r;
+}
+
+function parseDate(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function fmtDisplayDate(d) {
+  return d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+}
+
+/* ─── CLOCK ─── */
+function updateClock() {
+  const n = new Date();
+  const h = String(n.getHours()).padStart(2,'0');
+  const m = String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = h + ':' + m;
+  document.getElementById('date-str').textContent = n.toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ─── WEEK STRIP ─── */
+function renderWeek() {
+  const monday = new Date(today);
+  const day = monday.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  monday.setDate(monday.getDate() + diff);
+
+  const strip = document.getElementById('week-strip');
+  strip.innerHTML = '';
+
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(monday, i);
+    const ds = fmt(d);
+    const isToday = ds === fmt(today);
+    const isSelected = ds === fmt(selectedDate);
+
+    const dayEvts = events.filter(e => e.date === ds);
+
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (isToday ? ' today' : '') + (isSelected && !isToday ? ' selected' : '');
+
+    const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const dots = dayEvts.map(e => {
+      const c = EVENT_COLORS[e.member] || '#C4622D';
+      return `<div class="day-dot" style="background:${isToday?'rgba(255,255,255,0.7)':c}"></div>`;
+    }).join('');
+
+    cell.innerHTML = `
+      <div class="day-name">${dayNames[d.getDay()]}</div>
+      <div class="day-num">${d.getDate()}</div>
+      <div class="day-dots">${dots}</div>
+    `;
+
+    cell.addEventListener('click', () => {
+      selectedDate = new Date(d);
+      renderWeek();
+      renderEvents();
+    });
+
+    strip.appendChild(cell);
+  }
+}
+
+/* ─── EVENTS LIST ─── */
+function renderEvents() {
+  const ds = fmt(selectedDate);
+  const isToday = ds === fmt(today);
+  const label = document.getElementById('day-events-label');
+  label.textContent = isToday ? "Today's Events" : fmtDisplayDate(selectedDate);
+
+  const dayEvts = events.filter(e => e.date === ds).sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99'));
+
+  const badge = document.getElementById('event-count-badge');
+  badge.textContent = dayEvts.length + (dayEvts.length === 1 ? ' event' : ' events');
+
+  const list = document.getElementById('events-list');
+  if (!dayEvts.length) {
+    list.innerHTML = '<div class="empty-state">Nothing scheduled — enjoy the calm ✦</div>';
+    return;
+  }
+
+  list.innerHTML = dayEvts.map(e => {
+    const m = MEMBERS[e.member] || MEMBERS[''];
+    const color = EVENT_COLORS[e.member] || '#C4622D';
+    return `
+      <div class="event-item">
+        <div class="event-time">${e.time || '—'}</div>
+        <div class="event-bar" style="background:${color}"></div>
+        <div class="event-info">
+          <div class="event-name">${e.name}</div>
+          <div class="event-meta">
+            <span class="event-tag" style="background:${m.bg};color:${m.color}">${m.label}</span>
+          </div>
+        </div>
+        <div style="cursor:pointer;font-size:16px;color:var(--ink-faint);padding:2px 6px;" onclick="deleteEvent(${e.id})" title="Remove">✕</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteEvent(id) {
+  events = events.filter(e => e.id !== id);
+  renderWeek();
+  renderEvents();
+}
+
+/* ─── CHORES ─── */
+function renderChores() {
+  const done = chores.filter(c => c.done).length;
+  const total = chores.length;
+  document.getElementById('chores-progress-label').textContent = done + ' / ' + total + ' done';
+  document.getElementById('chore-progress-fill').style.width = total ? Math.round(done/total*100)+'%' : '0%';
+
+  const list = document.getElementById('chores-list');
+  list.innerHTML = chores.map(c => {
+    const m = MEMBERS[c.member] || MEMBERS[''];
+    return `
+      <div class="chore-item ${c.done ? 'done' : ''}">
+        <div class="chore-check ${c.done ? 'checked' : ''}" onclick="toggleChore(${c.id})"></div>
+        <div class="chore-info">
+          <div class="chore-name">${c.name}</div>
+        </div>
+        <span class="member-badge" style="background:${m.bg};color:${m.color}">${m.label}</span>
+        <div style="cursor:pointer;font-size:13px;color:var(--ink-faint);padding:2px 4px;" onclick="deleteChore(${c.id})" title="Remove">✕</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleChore(id) {
+  const c = chores.find(c => c.id === id);
+  if (c) c.done = !c.done;
+  renderChores();
+}
+
+function deleteChore(id) {
+  chores = chores.filter(c => c.id !== id);
+  renderChores();
+}
+
+/* ─── SCHOOL EVENTS ─── */
+function renderSchool() {
+  const todayMs = new Date(fmt(today) + 'T00:00:00').getTime();
+  const sorted = [...schoolEvents]
+    .filter(e => parseDate(e.date).getTime() >= todayMs)
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  const list = document.getElementById('school-list');
+  if (!sorted.length) {
+    list.innerHTML = '<div class="empty-state">No upcoming school events</div>';
+    return;
+  }
+
+  list.innerHTML = sorted.map(e => {
+    const d = parseDate(e.date);
+    const daysAway = Math.round((d.getTime() - todayMs) / 86400000);
+    const monthStr = d.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase();
+    const kid = e.kid ? MEMBERS[e.kid] : null;
+
+    const daysLabel = daysAway === 0 ? 'Today!' : daysAway === 1 ? 'Tomorrow' : `in ${daysAway}d`;
+
+    return `
+      <div class="school-item">
+        <div class="school-date-box">
+          <div class="school-month">${monthStr}</div>
+          <div class="school-day">${d.getDate()}</div>
+        </div>
+        <div class="school-info">
+          <div class="school-name">${e.name}</div>
+          <div class="school-detail">${e.detail}</div>
+          ${kid ? `<span class="member-badge" style="background:${kid.bg};color:${kid.color};font-size:10px;padding:2px 7px;margin-top:3px;display:inline-flex">${kid.label}</span>` : ''}
+        </div>
+        <div class="days-away">${daysLabel}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ─── MODALS ─── */
+function openAddEvent() {
+  document.getElementById('ev-date').value = fmt(selectedDate);
+  document.getElementById('ev-name').value = '';
+  document.getElementById('ev-time').value = '';
+  document.getElementById('modal-event').classList.add('open');
+}
+
+function openAddChore() {
+  document.getElementById('ch-name').value = '';
+  document.getElementById('modal-chore').classList.add('open');
+}
+
+function openAddSchool() {
+  document.getElementById('sc-name').value = '';
+  document.getElementById('sc-date').value = '';
+  document.getElementById('sc-detail').value = '';
+  document.getElementById('modal-school').classList.add('open');
+}
+
+function closeModals() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+}
+
+function saveEvent() {
+  const name = document.getElementById('ev-name').value.trim();
+  const date = document.getElementById('ev-date').value;
+  if (!name || !date) return;
+  events.push({ id: nextId++, name, date, time: document.getElementById('ev-time').value, member: document.getElementById('ev-member').value });
+  closeModals();
+  renderWeek();
+  renderEvents();
+}
+
+function saveChore() {
+  const name = document.getElementById('ch-name').value.trim();
+  if (!name) return;
+  chores.push({ id: nextId++, name, member: document.getElementById('ch-member').value, done: false });
+  closeModals();
+  renderChores();
+}
+
+function saveSchool() {
+  const name = document.getElementById('sc-name').value.trim();
+  const date = document.getElementById('sc-date').value;
+  if (!name || !date) return;
+  schoolEvents.push({ id: nextId++, name, date, detail: document.getElementById('sc-detail').value, kid: document.getElementById('sc-kid').value });
+  closeModals();
+  renderSchool();
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModals(); });
+});
+
+/* ─── INIT ─── */
+renderWeek();
+renderEvents();
+renderChores();
+renderSchool();
+
+/* ─── RESET CHORES DAILY (demo: logs to console) ─── */
+const lastReset = localStorage.getItem('lastReset');
+const todayKey = fmt(today);
+if (lastReset !== todayKey) {
+  chores.forEach(c => c.done = false);
+  localStorage.setItem('lastReset', todayKey);
+  renderChores();
+}
+</script>
+</body>
+</html>
