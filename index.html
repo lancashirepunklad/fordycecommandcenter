@@ -316,6 +316,7 @@
     <h3>Add Upcoming Event</h3>
     <input type="text" id="sc-name" placeholder="Event name">
     <input type="date" id="sc-date">
+    <input type="time" id="sc-time">
     <input type="text" id="sc-detail" placeholder="Details (teacher, location…)">
     <select id="sc-kid">
       <option value="">Whole family</option>
@@ -475,7 +476,7 @@ function renderEvents() {
 
   const upcomingEvts = schoolEvents
     .filter(e => e.date === ds)
-    .map(e => ({ id: null, name: '📌 ' + e.name, time: '', member: e.kid || '' }));
+    .map(e => ({ id: null, name: '📌 ' + e.name, time: e.time || '', member: e.kid || '' }));
 
   const allEvts = [...dayEvts, ...mealEvts, ...upcomingEvts];
   const badge = document.getElementById('event-count-badge');
@@ -544,7 +545,7 @@ function renderSchool() {
           <div class="school-day">${d.getDate()}</div>
         </div>
         <div class="school-info">
-          <div class="school-name">${e.name}</div>
+          <div class="school-name">${e.name}${e.time ? ' · ' + e.time : ''}</div>
           <div class="school-detail">${e.detail}</div>
           ${kid ? `<span class="member-badge" style="background:${kid.bg};color:${kid.color};font-size:10px;padding:2px 7px;margin-top:3px;display:inline-flex">${kid.label}</span>` : ''}
         </div>
@@ -634,7 +635,7 @@ function removeMeal(date, group, idx) {
 /* MODALS */
 function openAddEvent() { document.getElementById('ev-date').value = fmt(selectedDate); document.getElementById('ev-name').value = ''; document.getElementById('ev-time').value = ''; document.getElementById('modal-event').classList.add('open'); }
 function openAddChore() { document.getElementById('ch-name').value = ''; document.getElementById('modal-chore').classList.add('open'); }
-function openAddSchool() { document.getElementById('sc-name').value = ''; document.getElementById('sc-date').value = ''; document.getElementById('sc-detail').value = ''; document.getElementById('modal-school').classList.add('open'); }
+function openAddSchool() { document.getElementById('sc-name').value = ''; document.getElementById('sc-date').value = ''; document.getElementById('sc-time').value = ''; document.getElementById('sc-detail').value = ''; document.getElementById('modal-school').classList.add('open'); }
 function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
 
 function saveEvent() {
@@ -654,7 +655,7 @@ function saveSchool() {
   const name = document.getElementById('sc-name').value.trim();
   const date = document.getElementById('sc-date').value;
   if (!name||!date) return;
-  schoolEvents.push({ id: nextId++, name, date, detail: document.getElementById('sc-detail').value, kid: document.getElementById('sc-kid').value });
+  schoolEvents.push({ id: nextId++, name, date, time: document.getElementById('sc-time').value, detail: document.getElementById('sc-detail').value, kid: document.getElementById('sc-kid').value });
   closeModals(); saveData(); renderSchool();
 }
 
@@ -707,7 +708,7 @@ function exportIcal() {
   // Upcoming events
   schoolEvents.forEach(e => {
     const kid = e.kid ? MEMBERS[e.kid] : MEMBERS[''];
-    const { start, end } = icalDate(e.date, '');
+    const { start, end } = icalDate(e.date, e.time || '');
     lines.push('BEGIN:VEVENT');
     lines.push(`UID:upcoming-${e.id}@fordyce`);
     lines.push(start); lines.push(end);
@@ -716,21 +717,34 @@ function exportIcal() {
     lines.push('END:VEVENT');
   });
 
+  // Chores as VTODO (Apple Reminders)
+  chores.forEach(c => {
+    const member = MEMBERS[c.member] || MEMBERS[''];
+    lines.push('BEGIN:VTODO');
+    lines.push(`UID:chore-${c.id}@fordyce`);
+    lines.push(`SUMMARY:${sanitise(c.name)}`);
+    lines.push(`DESCRIPTION:Assigned to ${sanitise(member.label)}`);
+    lines.push(`STATUS:${c.done ? 'COMPLETED' : 'NEEDS-ACTION'}`);
+    lines.push('END:VTODO');
+  });
+
   // Meals
   Object.entries(meals).forEach(([date, dm]) => {
     (dm.parents||[]).forEach((m, idx) => {
-      const { start, end } = icalDate(date, '');
+      const d = date.replace(/-/g, '');
       lines.push('BEGIN:VEVENT');
       lines.push(`UID:meal-p-${date}-${idx}@fordyce`);
-      lines.push(start); lines.push(end);
+      lines.push(`DTSTART:${d}T180000`);
+      lines.push(`DTEND:${d}T190000`);
       lines.push(`SUMMARY:🍽 ${sanitise(m)} (Parents)`);
       lines.push('END:VEVENT');
     });
     (dm.children||[]).forEach((m, idx) => {
-      const { start, end } = icalDate(date, '');
+      const d = date.replace(/-/g, '');
       lines.push('BEGIN:VEVENT');
       lines.push(`UID:meal-k-${date}-${idx}@fordyce`);
-      lines.push(start); lines.push(end);
+      lines.push(`DTSTART:${d}T180000`);
+      lines.push(`DTEND:${d}T190000`);
       lines.push(`SUMMARY:🍽 ${sanitise(m)} (Kids)`);
       lines.push('END:VEVENT');
     });
